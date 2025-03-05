@@ -18,7 +18,7 @@ class CacheService:
 
         if self.enabled:
             try:
-                self.redis: aioredis.Redis = aioredis.Redis(
+                self.redis = aioredis.Redis(
                     host=self.settings.cache_host,
                     port=self.settings.cache_port,
                     db=self.settings.cache_db,
