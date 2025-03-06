@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { presetExamples } from "@/lib/presets";
 import { VisualizationResponse } from "@/lib/types";
@@ -17,12 +17,29 @@ export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: T
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [isCustomInput, setIsCustomInput] = useState(false);
 
+  const handlePresetSelect = useCallback(
+    (presetId: string) => {
+      const preset = presetExamples.find((p) => p.id === presetId);
+      if (preset) {
+        setTexts(preset.texts);
+        setActivePreset(presetId);
+        setIsCustomInput(false);
+
+        // If preset has visualization data, notify parent component
+        if (preset.visualizationData) {
+          onPresetSelect(presetId, preset.visualizationData);
+        }
+      }
+    },
+    [onPresetSelect]
+  );
+
   // Select the first preset by default when component mounts
   useEffect(() => {
     if (presetExamples.length > 0 && !activePreset) {
       handlePresetSelect(presetExamples[0].id);
     }
-  }, []);
+  }, [activePreset, handlePresetSelect]);
 
   const handleTextChange = (index: number, value: string) => {
     const newTexts = [...texts];
@@ -56,20 +73,6 @@ export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: T
       return;
     }
     onSubmit(filteredTexts);
-  };
-
-  const handlePresetSelect = (presetId: string) => {
-    const preset = presetExamples.find((p) => p.id === presetId);
-    if (preset) {
-      setTexts(preset.texts);
-      setActivePreset(presetId);
-      setIsCustomInput(false);
-
-      // If preset has visualization data, notify parent component
-      if (preset.visualizationData) {
-        onPresetSelect(presetId, preset.visualizationData);
-      }
-    }
   };
 
   return (

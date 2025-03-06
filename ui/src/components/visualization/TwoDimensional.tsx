@@ -7,9 +7,19 @@ interface TwoDimensionalProps {
   algorithm: "pca" | "tsne" | "umap";
 }
 
+interface TooltipPayloadItem {
+  payload: {
+    label: string;
+    x: number;
+    y: number;
+    z: number;
+    index: number;
+  };
+}
+
 interface CustomTooltipProps {
   active?: boolean;
-  payload?: any[];
+  payload?: TooltipPayloadItem[];
 }
 
 const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {

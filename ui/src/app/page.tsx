@@ -17,7 +17,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<VisualizationResponse | null>(null);
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const setActivePresetId = useState<string | null>(null)[1];
   const authenticatedFetch = useAuthenticatedFetch();
 
   // Load the first preset visualization data by default
@@ -29,7 +29,7 @@ export default function Home() {
         setActivePresetId(firstPreset.id);
       }
     }
-  }, [isLoaded, isSignedIn, results]);
+  }, [isLoaded, isSignedIn, results, setActivePresetId]);
 
   // Handle preset selection
   const handlePresetSelect = (presetId: string, visualizationData: VisualizationResponse) => {

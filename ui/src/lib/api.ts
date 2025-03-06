@@ -1,4 +1,4 @@
-import { TextInput, VisualizationRequest, VisualizationResponse } from "./types";
+import { VisualizationRequest, VisualizationResponse } from "./types";
 
 // Define the base URL for the API
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";

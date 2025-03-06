@@ -13,7 +13,7 @@ export default function Introduction() {
           where similar texts appear closer together.
         </p>
         <p>
-          When we convert text to embeddings, we're essentially translating human language into a
+          When we convert text to embeddings, we are essentially translating human language into a
           mathematical space where:
         </p>
         <ul className="my-4 list-disc space-y-2 pl-6">
@@ -31,7 +31,7 @@ export default function Introduction() {
           (embeddings) to understand meaning and context.
         </p>
         <p>
-          By visualizing embeddings, you can get a glimpse into how AI "thinks" about text
+          By visualizing embeddings, you can get a glimpse into how AI &quot;thinks&quot; about text
           similarity and relationships between concepts.
         </p>
       </div>
