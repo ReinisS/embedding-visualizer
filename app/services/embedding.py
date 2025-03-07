@@ -23,6 +23,9 @@ class EmbeddingService:
         Returns:
             Dictionary mapping text content to embeddings
         """
+        if not texts:
+            return {}
+
         # Extract text content
         text_content = [text.text for text in texts]
 
