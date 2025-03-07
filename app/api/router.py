@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.dependencies import track_event, verify_auth_token
+from app.api.dependencies import check_rate_limit, track_event, verify_auth_token
 from app.config import get_settings
 from app.models.schemas import (
     ItemResult,
@@ -33,7 +33,7 @@ async def health_check() -> dict[str, str]:
     response_model=VisualizationResponse,
     dependencies=[
         Depends(verify_auth_token),
-        # Depends(check_rate_limit),
+        Depends(check_rate_limit),
         Depends(track_event),
     ],
 )

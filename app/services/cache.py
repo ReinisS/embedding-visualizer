@@ -1,4 +1,4 @@
-"""Service for caching embeddings using Redis."""
+"""Service for caching embeddings and rate limiting using Redis."""
 
 import json
 
@@ -129,3 +129,32 @@ class CacheService:
                 success = False
 
         return success
+
+    async def check_rate_limit(self, user_id: str, endpoint: str) -> tuple[bool, int]:
+        """Check if user has exceeded rate limit for an endpoint.
+
+        Args:
+            user_id: The user's ID
+            endpoint: The API endpoint being accessed
+
+        Returns:
+            Tuple of (is_allowed, current_count)
+        """
+        if not self.enabled:
+            return True, 0  # Allow request if Redis is not available
+
+        try:
+            # Create a unique key for this user and endpoint
+            key = f"rate_limit:{user_id}:{endpoint}"
+
+            # Increment the counter and set expiry if it doesn't exist
+            count = await self.redis.incr(key)
+            if count == 1:
+                await self.redis.expire(key, 60)
+
+            # Check if user has exceeded their limit
+            max_requests = self.settings.requests_per_minute_per_user
+            return count <= max_requests, count
+        except RedisError as e:
+            print(f"Error checking rate limit: {e}")
+            return True, 0  # Allow request if Redis fails
