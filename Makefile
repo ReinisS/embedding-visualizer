@@ -5,3 +5,7 @@ run-backend:
 .PHONY: run-redis
 run-redis:
 	docker compose up -d redis
+
+.PHONY: run-tests
+run-tests:
+	uv run pytest .
