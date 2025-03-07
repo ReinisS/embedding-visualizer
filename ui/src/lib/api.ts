@@ -1,7 +1,8 @@
 import { VisualizationRequest, VisualizationResponse } from "./types";
 
 // Define the base URL for the API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/embedding-visualizer/api";
 
 // Function to create a visualization request
 export const createVisualizationRequest = (texts: string[]): VisualizationRequest => {
@@ -22,7 +23,7 @@ export const fetchVisualization = async (
   const request = createVisualizationRequest(texts);
 
   try {
-    return await authenticatedFetch<VisualizationResponse>(`${API_BASE_URL}/api/visualize`, {
+    return await authenticatedFetch<VisualizationResponse>(`${API_BASE_URL}/visualize`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

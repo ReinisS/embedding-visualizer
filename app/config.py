@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     # API Configuration
     debug: bool = Field(default=False, validation_alias="APP_DEBUG")
-    api_prefix: str = Field(default="/api", validation_alias="APP_API_PREFIX")
+    api_prefix: str = Field(default="/embedding-visualizer/api", validation_alias="APP_API_PREFIX")
 
     # Authentication
     clerk_publishable_key: str = Field(..., validation_alias="APP_CLERK_PUBLISHABLE_KEY")
