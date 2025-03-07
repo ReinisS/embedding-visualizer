@@ -35,4 +35,4 @@ COPY --from=builder --chown=app:app /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Run the FastAPI application by default
-CMD ["fastapi", "run", "--host", "127.0.0.1", "--port", "8000", "/app/main.py"]
+CMD ["fastapi", "run", "--host", "0.0.0.0", "/app/main.py"]
