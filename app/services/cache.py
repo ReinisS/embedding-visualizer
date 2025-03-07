@@ -6,6 +6,9 @@ import redis.asyncio as aioredis
 from redis.exceptions import ConnectionError, RedisError
 
 from app.config import get_settings
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class CacheService:
@@ -27,7 +30,7 @@ class CacheService:
                 self.ttl = self.settings.cache_ttl_seconds
             except (ConnectionError, RedisError) as e:
                 self.enabled = False
-                print(f"Failed to initialize Redis cache: {e}")
+                logger.error("Failed to initialize Redis cache: %s", e)
 
     async def get_embedding(
         self,
@@ -51,7 +54,7 @@ class CacheService:
             if cached_data:
                 return json.loads(cached_data)
         except (RedisError, json.JSONDecodeError) as e:
-            print(f"Error retrieving from cache: {e}")
+            logger.error("Error retrieving from cache: %s", e)
 
         return None
 
@@ -82,7 +85,7 @@ class CacheService:
             )
             return True
         except (RedisError, TypeError) as e:
-            print(f"Error storing in cache: {e}")
+            logger.error("Error storing in cache: %s", e)
             return False
 
     async def get_embeddings(
@@ -156,5 +159,5 @@ class CacheService:
             max_requests = self.settings.requests_per_minute_per_user
             return count <= max_requests, count
         except RedisError as e:
-            print(f"Error checking rate limit: {e}")
+            logger.error("Error checking rate limit: %s", e)
             return True, 0  # Allow request if Redis fails

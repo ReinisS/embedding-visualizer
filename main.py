@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import router
 from app.config import get_settings
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
@@ -15,11 +18,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
     # Startup
     settings = get_settings()
-    print(f"Starting application in {'debug' if settings.debug else 'production'} mode")
+    logger.info("Starting application in %s mode", "debug" if settings.debug else "production")
     # Run application
     yield
     # Shutdown
-    print("Shutting down application")
+    logger.info("Shutting down application")
 
 
 def create_app() -> FastAPI:
