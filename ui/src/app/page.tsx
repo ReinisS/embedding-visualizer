@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Introduction from "@/components/Introduction";
 import TextInputForm from "@/components/TextInputForm";
 import RawEmbeddings from "@/components/RawEmbeddings";
+import GitHubButton from "@/components/GitHubButton";
 import VisualizationTabs from "@/components/VisualizationTabs";
 import useAuthenticatedFetch from "@/hooks/useAuthenticatedFetch";
 import { fetchVisualization } from "@/lib/api";
@@ -63,7 +63,6 @@ export default function Home() {
     }
   };
 
-  // Show loading indicator while Clerk loads
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -73,22 +72,15 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div>
       <div className="mb-12 text-center">
         <h1 className="mb-2 text-3xl font-bold">Text Embedding Visualizer</h1>
-        <p className="text-lg text-gray-300">
-          Explore how text embeddings work with interactive visualizations
+        <p className="text-lg text-gray-400">
+          Learn how computers understand the meaning behind text
         </p>
 
         <div className="mt-4 flex justify-center gap-4">
-          <a
-            className="flex h-10 items-center justify-center rounded-full border border-solid border-black/[.08] px-4 text-sm transition-colors hover:border-transparent hover:bg-[#f2f2f2] sm:h-12 sm:min-w-44 sm:px-5 sm:text-base dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-            href="https://github.com/ReinisS/embedding-visualizer"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View code of this project on GitHub
-          </a>
+          <GitHubButton />
         </div>
       </div>
 
@@ -113,32 +105,6 @@ export default function Home() {
           <VisualizationTabs results={results.results} />
         </>
       )}
-
-      <div className="mt-12 max-w-2xl rounded-lg border border-white/10 bg-white/5 p-6">
-        <h2 className="mb-4 text-xl font-semibold">About This Project</h2>
-        <p className="mb-4">
-          This interactive tool helps you understand how text embeddings work by visualizing them in
-          both 2D and 3D space. You can:
-        </p>
-        <ul className="list-inside list-disc space-y-2">
-          <li>Enter your own text samples or use our presets</li>
-          <li>See the raw embedding vectors</li>
-          <li>Explore different dimensionality reduction techniques (PCA, t-SNE, UMAP)</li>
-          <li>Interact with 2D and 3D visualizations</li>
-        </ul>
-      </div>
-
-      <footer className="mt-12 flex flex-wrap items-center justify-center gap-6">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://github.com/ReinisS/embedding-visualizer"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image aria-hidden src="/file.svg" alt="File icon" width={16} height={16} />
-          GitHub Repository
-        </a>
-      </footer>
     </div>
   );
 }

@@ -4,88 +4,72 @@ import React, { useState } from "react";
 import { ItemResult } from "@/lib/types";
 import TwoDimensional from "./visualization/TwoDimensional";
 import ThreeDimensional from "./visualization/ThreeDimensional";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface VisualizationTabsProps {
   results: ItemResult[];
 }
 
-type DimensionType = "2d" | "3d";
 type AlgorithmType = "pca" | "tsne" | "umap";
+type DimensionType = "2d" | "3d";
 
 export default function VisualizationTabs({ results }: VisualizationTabsProps) {
-  const [activeDimension, setActiveDimension] = useState<DimensionType>("2d");
   const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmType>("pca");
+  const [activeDimension, setActiveDimension] = useState<DimensionType>("2d");
 
   if (!results || results.length === 0) {
     return null;
   }
 
-  const handleDimensionChange = (dimension: DimensionType) => {
-    setActiveDimension(dimension);
-  };
-
-  const handleAlgorithmChange = (algorithm: AlgorithmType) => {
-    setActiveAlgorithm(algorithm);
-  };
-
   return (
     <div className="mb-12">
       <h2 className="mb-6 text-xl font-semibold">Visualizations</h2>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        <div className="rounded-lg border border-white/10 bg-white/5 p-1">
-          <button
-            onClick={() => handleDimensionChange("2d")}
-            className={`rounded-md px-4 py-2 ${
-              activeDimension === "2d" ? "bg-blue-600 text-white" : "hover:bg-white/10"
-            }`}
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center gap-4">
+          <Tabs
+            defaultValue="2d"
+            value={activeDimension}
+            onValueChange={(value) => setActiveDimension(value as DimensionType)}
+            className="inline-flex"
           >
-            2D View
-          </button>
-          <button
-            onClick={() => handleDimensionChange("3d")}
-            className={`rounded-md px-4 py-2 ${
-              activeDimension === "3d" ? "bg-blue-600 text-white" : "hover:bg-white/10"
-            }`}
+            <TabsList>
+              <TabsTrigger value="2d" className="cursor-pointer">
+                2D View
+              </TabsTrigger>
+              <TabsTrigger value="3d" className="cursor-pointer">
+                3D View
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <Tabs
+            defaultValue="pca"
+            value={activeAlgorithm}
+            onValueChange={(value) => setActiveAlgorithm(value as AlgorithmType)}
+            className="inline-flex"
           >
-            3D View
-          </button>
+            <TabsList>
+              <TabsTrigger value="pca" className="cursor-pointer">
+                PCA
+              </TabsTrigger>
+              <TabsTrigger value="tsne" className="cursor-pointer">
+                t-SNE
+              </TabsTrigger>
+              <TabsTrigger value="umap" className="cursor-pointer">
+                UMAP
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
-        <div className="rounded-lg border border-white/10 bg-white/5 p-1">
-          <button
-            onClick={() => handleAlgorithmChange("pca")}
-            className={`rounded-md px-4 py-2 ${
-              activeAlgorithm === "pca" ? "bg-blue-600 text-white" : "hover:bg-white/10"
-            }`}
-          >
-            PCA
-          </button>
-          <button
-            onClick={() => handleAlgorithmChange("tsne")}
-            className={`rounded-md px-4 py-2 ${
-              activeAlgorithm === "tsne" ? "bg-blue-600 text-white" : "hover:bg-white/10"
-            }`}
-          >
-            t-SNE
-          </button>
-          <button
-            onClick={() => handleAlgorithmChange("umap")}
-            className={`rounded-md px-4 py-2 ${
-              activeAlgorithm === "umap" ? "bg-blue-600 text-white" : "hover:bg-white/10"
-            }`}
-          >
-            UMAP
-          </button>
+        <div className="rounded-lg border border-white/10 bg-white/5 p-6">
+          {activeDimension === "2d" ? (
+            <TwoDimensional results={results} algorithm={activeAlgorithm} />
+          ) : (
+            <ThreeDimensional results={results} algorithm={activeAlgorithm} />
+          )}
         </div>
-      </div>
-
-      <div className="rounded-lg border border-white/10 bg-white/5 p-6">
-        {activeDimension === "2d" ? (
-          <TwoDimensional results={results} algorithm={activeAlgorithm} />
-        ) : (
-          <ThreeDimensional results={results} algorithm={activeAlgorithm} />
-        )}
       </div>
     </div>
   );

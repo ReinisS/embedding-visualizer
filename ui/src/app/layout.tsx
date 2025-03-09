@@ -9,6 +9,10 @@ import {
 } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { ModeToggle } from "@/components/ModeToggle";
+import { Button } from "@/components/ui/button";
+import GitHubButton from "@/components/GitHubButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +26,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Text Embedding Visualizer",
-  description: "Explore and visualize text embeddings in 2D and 3D space",
+  description: "Learn how computers understand the meaning behind text",
 };
 
 export default function RootLayout({
@@ -32,18 +36,50 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <header className="flex h-16 items-center justify-end gap-4 p-4">
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header>
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <header className="flex h-16 items-center justify-end gap-2 p-4">
+              <ModeToggle />
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="outline" size="default">
+                    Sign in
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button variant="outline" size="default">
+                    Sign up
+                  </Button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </header>
+            <div className="mx-auto max-w-4xl">{children}</div>
+            <footer className="my-6 flex flex-col items-center justify-center gap-6">
+              <GitHubButton />
+              <div className="text-sm">
+                <div>
+                  &copy; {new Date().getFullYear()} • Text Embedding Visualizer -{" "}
+                  <a
+                    className="underline"
+                    href="https://www.linkedin.com/in/reinis-sestakovskis"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Reinis Šestakovskis
+                  </a>
+                </div>
+              </div>
+            </footer>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

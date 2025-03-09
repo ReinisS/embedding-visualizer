@@ -58,23 +58,63 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
     return null;
   }
 
-  // Transform the data for the 3D visualization
-  const points = results
-    .map((item, index) => {
-      const reduction = item.reductions.find((r) => r.algorithm === algorithm);
-      if (!reduction) return null;
+  // Transform and normalize the data for the 3D visualization
+  const points = (() => {
+    // First collect all coordinates
+    const coordinates = results
+      .map((item) => {
+        const reduction = item.reductions.find((r) => r.algorithm === algorithm);
+        if (!reduction) return null;
+        return reduction.coordinates_3d;
+      })
+      .filter(Boolean);
 
-      return {
-        position: [
-          reduction.coordinates_3d.x,
-          reduction.coordinates_3d.y,
-          reduction.coordinates_3d.z,
-        ] as [number, number, number],
-        label: item.label,
-        index,
-      };
-    })
-    .filter(Boolean);
+    // Find min and max values for normalization
+    // TypeScript non-null assertion is safe here because we've already filtered out null values
+    const minX = Math.min(...coordinates.map((coord) => coord!.x));
+    const maxX = Math.max(...coordinates.map((coord) => coord!.x));
+    const minY = Math.min(...coordinates.map((coord) => coord!.y));
+    const maxY = Math.max(...coordinates.map((coord) => coord!.y));
+    const minZ = Math.min(...coordinates.map((coord) => coord!.z));
+    const maxZ = Math.max(...coordinates.map((coord) => coord!.z));
+
+    // Normalize function
+    const normalize = (value: number, min: number, max: number) => {
+      // Handle edge case where min equals max
+      if (min === max) return 0.5;
+      return (value - min) / (max - min);
+    };
+
+    // Create normalized data
+    return results
+      .map((item, index) => {
+        const reduction = item.reductions.find((r) => r.algorithm === algorithm);
+        if (!reduction) return null;
+
+        // Normalize to 0-1 range, then scale to -2 to 2 for better 3D visualization
+        const normalizedX = normalize(reduction.coordinates_3d.x, minX, maxX);
+        const normalizedY = normalize(reduction.coordinates_3d.y, minY, maxY);
+        const normalizedZ = normalize(reduction.coordinates_3d.z, minZ, maxZ);
+
+        // Scale from 0-1 to -2 to 2 for better 3D visualization
+        const scaledX = normalizedX * 4 - 2;
+        const scaledY = normalizedY * 4 - 2;
+        const scaledZ = normalizedZ * 4 - 2;
+
+        return {
+          position: [scaledX, scaledY, scaledZ] as [number, number, number],
+          normalizedPosition: [normalizedX, normalizedY, normalizedZ] as [number, number, number],
+          originalPosition: [
+            reduction.coordinates_3d.x,
+            reduction.coordinates_3d.y,
+            reduction.coordinates_3d.z,
+          ] as [number, number, number],
+          label: item.label,
+          index,
+        };
+      })
+      .filter(Boolean);
+  })();
 
   // Get algorithm display name
   const algorithmNames = {
@@ -106,7 +146,7 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
               <Point3D
                 key={i}
                 position={point.position}
-                color="#3b82f6"
+                color={`var(--accent-foreground)`}
                 label={point.label}
                 index={point.index}
                 isHovered={hoveredPoint === point.index}
@@ -138,7 +178,7 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
           >
             <span
               className="mr-2 inline-block h-3 w-3 rounded-full"
-              style={{ backgroundColor: "#3b82f6" }}
+              style={{ backgroundColor: `var(--accent-foreground)` }}
             ></span>
             <span className="truncate text-sm">
               {item.label.length > 40 ? `${item.label.substring(0, 40)}...` : item.label}

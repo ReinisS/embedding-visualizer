@@ -1,60 +1,66 @@
-import React, { useState } from "react";
+import React from "react";
 import { ItemResult } from "@/lib/types";
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, LabelList } from "recharts";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartConfig,
+} from "@/components/ui/chart";
 
 interface TwoDimensionalProps {
   results: ItemResult[];
   algorithm: "pca" | "tsne" | "umap";
 }
 
-interface TooltipPayloadItem {
-  payload: {
-    label: string;
-    x: number;
-    y: number;
-    z: number;
-    index: number;
-  };
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayloadItem[];
-}
-
-const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-md border border-white/10 bg-black/80 p-3 shadow-lg">
-        <p className="font-medium">{payload[0].payload.label}</p>
-      </div>
-    );
-  }
-  return null;
-};
-
 export default function TwoDimensional({ results, algorithm }: TwoDimensionalProps) {
-  const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
-
   if (!results || results.length === 0) {
     return null;
   }
 
-  // Transform the data for the scatter chart
-  const chartData = results
-    .map((item, index) => {
-      const reduction = item.reductions.find((r) => r.algorithm === algorithm);
-      if (!reduction) return null;
+  // Transform and normalize the data for the scatter chart
+  const chartData = (() => {
+    // First collect all coordinates
+    const coordinates = results
+      .map((item) => {
+        const reduction = item.reductions.find((r) => r.algorithm === algorithm);
+        if (!reduction) return null;
+        return reduction.coordinates_2d;
+      })
+      .filter(Boolean);
 
-      return {
-        x: reduction.coordinates_2d.x,
-        y: reduction.coordinates_2d.y,
-        z: 1, // For consistent point size
-        label: item.label,
-        index,
-      };
-    })
-    .filter(Boolean);
+    // Find min and max values for normalization
+    // TypeScript non-null assertion is safe here because we've already filtered out null values
+    const minX = Math.min(...coordinates.map((coord) => coord!.x));
+    const maxX = Math.max(...coordinates.map((coord) => coord!.x));
+    const minY = Math.min(...coordinates.map((coord) => coord!.y));
+    const maxY = Math.max(...coordinates.map((coord) => coord!.y));
+
+    // Normalize function
+    const normalize = (value: number, min: number, max: number) => {
+      // Handle edge case where min equals max
+      if (min === max) return 0.5;
+      return (value - min) / (max - min);
+    };
+
+    // Create normalized data
+    return results
+      .map((item, index) => {
+        const reduction = item.reductions.find((r) => r.algorithm === algorithm);
+        if (!reduction) return null;
+
+        return {
+          x: normalize(reduction.coordinates_2d.x, minX, maxX),
+          y: normalize(reduction.coordinates_2d.y, minY, maxY),
+          label: item.label,
+          index,
+          // Keep original values for reference
+          originalX: reduction.coordinates_2d.x,
+          originalY: reduction.coordinates_2d.y,
+        };
+      })
+      .filter(Boolean);
+  })();
 
   // Get algorithm display name
   const algorithmNames = {
@@ -70,16 +76,25 @@ export default function TwoDimensional({ results, algorithm }: TwoDimensionalPro
     umap: "UMAP balances local and global structure, often providing a good compromise between PCA and t-SNE.",
   };
 
+  // Chart configuration
+  const chartConfig: ChartConfig = {
+    embeddings: {
+      label: "Embedding Visualizations",
+      color: `var(--accent-foreground)`,
+    },
+  };
+
   return (
-    <div className="mb-8">
+    <div>
       <h3 className="mb-2 text-lg font-medium">{algorithmNames[algorithm]}</h3>
       <p className="mb-4 text-gray-300">{algorithmDescriptions[algorithm]}</p>
 
-      <div className="h-[400px] w-full rounded-lg border border-white/10 bg-white/5 p-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+      <div className="w-full rounded-lg border border-white/10 bg-white/5 p-4">
+        <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+          <ScatterChart>
             <XAxis
               type="number"
+              domain={["dataMin - 0.2", "dataMax + 0.2"]}
               dataKey="x"
               name="X"
               tick={{ fill: "#9ca3af" }}
@@ -88,44 +103,27 @@ export default function TwoDimensional({ results, algorithm }: TwoDimensionalPro
             />
             <YAxis
               type="number"
+              domain={["dataMin - 0.2", "dataMax + 0.2"]}
               dataKey="y"
               name="Y"
               tick={{ fill: "#9ca3af" }}
               axisLine={{ stroke: "#4b5563" }}
               tickLine={{ stroke: "#4b5563" }}
             />
-            <ZAxis type="number" dataKey="z" range={[60, 60]} />
-            <Tooltip content={<CustomTooltip />} />
-            <Scatter
-              name="Embeddings"
-              data={chartData}
-              fill="#3b82f6"
-              onMouseOver={(data) => setHoveredPoint(data.index)}
-              onMouseOut={() => setHoveredPoint(null)}
+            <CartesianGrid />
+            <ChartTooltip
+              cursor={{ strokeDasharray: "3 3" }}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(_, payload) => payload[0]?.payload?.label || ""}
+                />
+              }
             />
+            <Scatter name="embeddings" data={chartData} fill={`var(--accent-foreground)`}>
+              <LabelList dataKey="label" position="top" />
+            </Scatter>
           </ScatterChart>
-        </ResponsiveContainer>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-        {results.map((item, index) => (
-          <div
-            key={index}
-            className={`flex items-center rounded-md p-2 ${
-              hoveredPoint === index ? "bg-blue-500/20" : "bg-white/5"
-            }`}
-            onMouseOver={() => setHoveredPoint(index)}
-            onMouseOut={() => setHoveredPoint(null)}
-          >
-            <span
-              className="mr-2 inline-block h-3 w-3 rounded-full"
-              style={{ backgroundColor: "#3b82f6" }}
-            ></span>
-            <span className="truncate text-sm">
-              {item.label.length > 40 ? `${item.label.substring(0, 40)}...` : item.label}
-            </span>
-          </div>
-        ))}
+        </ChartContainer>
       </div>
     </div>
   );
