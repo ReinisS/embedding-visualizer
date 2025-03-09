@@ -1,6 +1,6 @@
 import React from "react";
 import { ItemResult } from "@/lib/types";
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, LabelList } from "recharts";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, LabelList } from "recharts";
 import {
   ChartContainer,
   ChartTooltip,
