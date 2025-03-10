@@ -5,6 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import { ItemResult } from "@/lib/types";
 import * as THREE from "three";
+import { Button } from "@/components/ui/button";
 
 interface ThreeDimensionalProps {
   results: ItemResult[];
@@ -157,12 +158,9 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
         </Canvas>
 
         <div className="absolute bottom-4 left-4 flex gap-2">
-          <button
-            onClick={() => setRotationEnabled(!rotationEnabled)}
-            className="rounded-md bg-white/10 px-3 py-1.5 text-sm hover:bg-white/20"
-          >
+          <Button onClick={() => setRotationEnabled(!rotationEnabled)}>
             {rotationEnabled ? "Lock Camera" : "Unlock Camera"}
-          </button>
+          </Button>
         </div>
       </div>
 
