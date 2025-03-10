@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React, { useState } from "react";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import { ItemResult } from "@/lib/types";
-import * as THREE from "three";
 import { Button } from "@/components/ui/button";
 
 interface ThreeDimensionalProps {
@@ -22,31 +21,15 @@ interface Point3DProps {
 }
 
 function Point3D({ position, color, label, index, isHovered, onHover }: Point3DProps) {
-  const meshRef = useRef<THREE.Mesh | null>(null);
-
-  useFrame(() => {
-    if (meshRef.current && isHovered) {
-      meshRef.current.rotation.x += 0.01;
-      meshRef.current.rotation.y += 0.01;
-    }
-  });
-
   return (
-    <group>
-      <mesh
-        ref={meshRef}
-        position={position}
-        onPointerOver={() => onHover(index)}
-        onPointerOut={() => onHover(null)}
-      >
+    <group position={position}>
+      <mesh onPointerOver={() => onHover(index)} onPointerOut={() => onHover(null)}>
         <sphereGeometry args={[isHovered ? 0.15 : 0.1, 16, 16]} />
         <meshStandardMaterial color={color} emissive={isHovered ? color : undefined} />
-        {isHovered && (
-          <Html distanceFactor={10}>
-            <div className="rounded-md bg-black/80 p-2 text-xs text-white shadow-lg">{label}</div>
-          </Html>
-        )}
       </mesh>
+      <Html position={[0, 0.3, 0]} center>
+        <div className="pointer-events-none rounded-md bg-black/80 p-0.5 text-white">{label}</div>
+      </Html>
     </group>
   );
 }
@@ -162,27 +145,6 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
             {rotationEnabled ? "Lock Camera" : "Unlock Camera"}
           </Button>
         </div>
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3">
-        {results.map((item, index) => (
-          <div
-            key={index}
-            className={`flex items-center rounded-md p-2 ${
-              hoveredPoint === index ? "bg-blue-500/20" : "bg-white/5"
-            }`}
-            onMouseOver={() => setHoveredPoint(index)}
-            onMouseOut={() => setHoveredPoint(null)}
-          >
-            <span
-              className="mr-2 inline-block h-3 w-3 rounded-full"
-              style={{ backgroundColor: `var(--accent-foreground)` }}
-            ></span>
-            <span className="truncate text-sm">
-              {item.label.length > 40 ? `${item.label.substring(0, 40)}...` : item.label}
-            </span>
-          </div>
-        ))}
       </div>
     </div>
   );
