@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, memo } from "react";
+import { useDebouncedCallback } from "use-debounce";
 import { SignInButton, useAuth } from "@clerk/nextjs";
 import { presetExamples } from "@/lib/presets";
-import { VisualizationResponse } from "@/lib/types";
 import {
   Accordion,
   AccordionItem,
@@ -12,66 +12,86 @@ import {
 } from "@/components/ui/accordion";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+
+const DebouncedTextInput = memo(
+  ({
+    initialValue,
+    onChangeCommitted,
+    placeholder,
+    disabled,
+  }: {
+    initialValue: string;
+    onChangeCommitted: (value: string) => void;
+    placeholder?: string;
+    disabled?: boolean;
+  }) => {
+    const [localValue, setLocalValue] = useState(initialValue);
+
+    // Update local value when initialValue changes (e.g., when preset is selected)
+    useEffect(() => {
+      setLocalValue(initialValue);
+    }, [initialValue]);
+
+    // Update only local state while typing for immediate feedback
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setLocalValue(e.target.value);
+    };
+
+    // Commit changes to parent only when user pauses typing
+    const debouncedCommit = useDebouncedCallback(() => {
+      if (localValue !== initialValue) {
+        onChangeCommitted(localValue);
+      }
+    }, 100);
+
+    // Trigger the debounced commit when local value changes
+    useEffect(() => {
+      debouncedCommit();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [localValue]);
+
+    return (
+      <Textarea
+        value={localValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        rows={2}
+        maxLength={100}
+        className="w-full resize-none overflow-hidden"
+        style={{ wordBreak: "break-word" }}
+      />
+    );
+  }
+);
 
 interface TextInputFormProps {
-  onSubmit: (texts: string[]) => void;
-  onPresetSelect: (presetId: string, visualizationData: VisualizationResponse) => void;
+  texts: string[];
+  activePresetId: string | null;
+  isCustomInput: boolean;
   isLoading: boolean;
+  onTextChange: (index: number, value: string) => void;
+  onAddText: () => void;
+  onRemoveText: (index: number) => void;
+  onPresetSelect: (presetId: string) => void;
+  onSubmit: (texts: string[]) => void;
+  onClearData: () => void;
 }
 
-export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: TextInputFormProps) {
+const TextInputForm = memo(function TextInputForm({
+  texts,
+  activePresetId,
+  isCustomInput,
+  isLoading,
+  onTextChange,
+  onAddText,
+  onRemoveText,
+  onPresetSelect,
+  onSubmit,
+  onClearData,
+}: TextInputFormProps) {
   const { isSignedIn } = useAuth();
-  const [texts, setTexts] = useState<string[]>(["", "", ""]);
-  const [activePreset, setActivePreset] = useState<string | null>(null);
-  const [isCustomInput, setIsCustomInput] = useState(false);
-
-  const handlePresetSelect = useCallback(
-    (presetId: string) => {
-      const preset = presetExamples.find((p) => p.id === presetId);
-      if (preset) {
-        setTexts(preset.texts);
-        setActivePreset(presetId);
-        setIsCustomInput(false);
-
-        // If preset has visualization data, notify parent component
-        if (preset.visualizationData) {
-          onPresetSelect(presetId, preset.visualizationData);
-        }
-      }
-    },
-    [onPresetSelect]
-  );
-
-  // Select the first preset by default when component mounts
-  useEffect(() => {
-    if (presetExamples.length > 0 && !activePreset) {
-      handlePresetSelect(presetExamples[0].id);
-    }
-  }, [activePreset, handlePresetSelect]);
-
-  const handleTextChange = (index: number, value: string) => {
-    const newTexts = [...texts];
-    newTexts[index] = value;
-    setTexts(newTexts);
-    setActivePreset(null);
-    setIsCustomInput(true);
-  };
-
-  const handleAddText = () => {
-    setTexts([...texts, ""]);
-    setIsCustomInput(true);
-  };
-
-  const handleRemoveText = (index: number) => {
-    if (texts.length <= 3) {
-      return; // Maintain minimum of 3 text inputs
-    }
-    const newTexts = [...texts];
-    newTexts.splice(index, 1);
-    setTexts(newTexts);
-    setActivePreset(null);
-    setIsCustomInput(true);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,8 +111,8 @@ export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: T
           {presetExamples.map((preset) => (
             <Button
               key={preset.id}
-              onClick={() => handlePresetSelect(preset.id)}
-              variant={activePreset === preset.id ? "default" : "outline"}
+              onClick={() => onPresetSelect(preset.id)}
+              variant={activePresetId === preset.id ? "default" : "outline"}
             >
               {preset.name}
             </Button>
@@ -115,13 +135,10 @@ export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: T
                     <div className="flex-grow">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <textarea
-                            value={text}
-                            onChange={(e) => handleTextChange(index, e.target.value)}
+                          <DebouncedTextInput
+                            initialValue={text}
+                            onChangeCommitted={(value) => onTextChange(index, value)}
                             placeholder={`Text sample ${index + 1}`}
-                            className="w-full rounded-md border border-white/10 bg-white/5 p-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-                            rows={2}
-                            maxLength={100}
                             disabled={!isSignedIn}
                           />
                         </TooltipTrigger>
@@ -134,41 +151,66 @@ export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: T
                       </div>
                     </div>
                     {texts.length > 3 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveText(index)}
-                        className="self-start p-2 text-gray-400 hover:text-white"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onRemoveText(index);
+                        }}
                         aria-label="Remove text input"
                         disabled={!isSignedIn}
                       >
                         ✕
-                      </button>
+                      </Button>
                     )}
                   </div>
                 ))}
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <Tooltip>
                   <TooltipTrigger>
-                    <Button variant="secondary" onClick={handleAddText} disabled={!isSignedIn}>
+                    <Button
+                      variant="secondary"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onAddText();
+                      }}
+                      disabled={!isSignedIn}
+                    >
                       + Add Another Text
                     </Button>
                   </TooltipTrigger>
                   {!isSignedIn && <TooltipContent>Sign in to add text inputs</TooltipContent>}
                 </Tooltip>
 
+                {isSignedIn && (
+                  <Button type="button" variant="outline" onClick={onClearData}>
+                    Clear Data
+                  </Button>
+                )}
+
                 {isSignedIn ? (
-                  <Button variant="default" disabled={isLoading || !isCustomInput}>
-                    {isLoading
-                      ? "Processing..."
-                      : !isCustomInput
-                        ? "Using Preset Data"
-                        : "Visualize Custom Input"}
+                  <Button
+                    type="submit"
+                    variant="default"
+                    disabled={isLoading}
+                    onClick={(e) => {
+                      if (!isCustomInput && !activePresetId) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    {isLoading ? "Processing..." : "Visualize Input"}
                   </Button>
                 ) : (
                   <SignInButton mode="modal">
-                    <Button variant="default">Sign In to Visualize Your Custom Inputs</Button>
+                    <Button type="button" variant="default">
+                      Sign In to visualize your custom inputs
+                    </Button>
                   </SignInButton>
                 )}
               </div>
@@ -178,4 +220,8 @@ export default function TextInputForm({ onSubmit, onPresetSelect, isLoading }: T
       </Accordion>
     </div>
   );
-}
+});
+
+TextInputForm.displayName = "TextInputForm";
+
+export default TextInputForm;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@clerk/nextjs";
 import Introduction from "@/components/Introduction";
 import TextInputForm from "@/components/TextInputForm";
@@ -17,51 +17,94 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<VisualizationResponse | null>(null);
-  const setActivePresetId = useState<string | null>(null)[1];
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [texts, setTexts] = useState<string[]>(["", "", ""]);
+  const [isCustomInput, setIsCustomInput] = useState(false);
   const authenticatedFetch = useAuthenticatedFetch();
+  const [hasMounted, setHasMounted] = useState(false);
 
-  // Load the first preset visualization data by default
-  useEffect(() => {
-    if (isLoaded && isSignedIn && presetExamples.length > 0 && !results) {
-      const firstPreset = presetExamples[0];
-      if (firstPreset.visualizationData) {
-        setResults(firstPreset.visualizationData);
-        setActivePresetId(firstPreset.id);
+  const handlePresetSelect = useCallback((presetId: string) => {
+    const preset = presetExamples.find((p) => p.id === presetId);
+    if (preset) {
+      setTexts(preset.texts);
+      setActivePresetId(presetId);
+      setIsCustomInput(false);
+      setError(null);
+
+      if (preset.visualizationData) {
+        setResults(preset.visualizationData);
       }
     }
-  }, [isLoaded, isSignedIn, results, setActivePresetId]);
+  }, []);
 
-  // Handle preset selection
-  const handlePresetSelect = (presetId: string, visualizationData: VisualizationResponse) => {
-    setResults(visualizationData);
-    setActivePresetId(presetId);
-    setError(null);
-  };
-
-  // Handle custom text input submission
-  const handleSubmit = async (texts: string[]) => {
-    if (!isSignedIn) {
-      return;
+  // Select the first preset by default when component first mounts
+  useEffect(() => {
+    if (!hasMounted && presetExamples.length > 0) {
+      handlePresetSelect(presetExamples[0].id);
+      setHasMounted(true);
     }
+  }, [hasMounted, handlePresetSelect]);
 
-    setIsLoading(true);
-    setError(null);
+  const handleTextChange = useCallback((index: number, value: string) => {
+    setTexts((prevTexts) => {
+      const newTexts = [...prevTexts];
+      newTexts[index] = value;
+      return newTexts;
+    });
     setActivePresetId(null);
+    setIsCustomInput(true);
+  }, []);
 
-    try {
-      const response = await fetchVisualization(authenticatedFetch, texts);
-      setResults(response);
-    } catch (err) {
-      console.error("Error fetching visualization:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "An error occurred while fetching the visualization data."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleClearData = useCallback(() => {
+    setTexts(["", "", ""]);
+    setActivePresetId(null);
+    setIsCustomInput(true);
+  }, []);
+
+  const handleAddText = useCallback(() => {
+    setTexts((prevTexts) => [...prevTexts, ""]);
+    setActivePresetId(null);
+    setIsCustomInput(true);
+  }, []);
+
+  const handleRemoveText = useCallback((index: number) => {
+    setTexts((prevTexts) => {
+      if (prevTexts.length <= 3) {
+        return prevTexts; // Maintain minimum of 3 text inputs
+      }
+      const newTexts = [...prevTexts];
+      newTexts.splice(index, 1);
+      return newTexts;
+    });
+    setActivePresetId(null);
+    setIsCustomInput(true);
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (texts: string[]) => {
+      if (!isSignedIn) {
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetchVisualization(authenticatedFetch, texts);
+        setResults(response);
+      } catch (err) {
+        console.error("Error fetching visualization:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while fetching the visualization data."
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isSignedIn, authenticatedFetch]
+  );
 
   if (!isLoaded) {
     return (
@@ -87,9 +130,16 @@ export default function Home() {
       <Introduction />
 
       <TextInputForm
-        onSubmit={handleSubmit}
-        onPresetSelect={handlePresetSelect}
+        texts={texts}
+        activePresetId={activePresetId}
+        isCustomInput={isCustomInput}
         isLoading={isLoading}
+        onTextChange={handleTextChange}
+        onAddText={handleAddText}
+        onRemoveText={handleRemoveText}
+        onPresetSelect={handlePresetSelect}
+        onSubmit={handleSubmit}
+        onClearData={handleClearData}
       />
 
       {error && (
