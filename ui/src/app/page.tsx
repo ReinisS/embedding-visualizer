@@ -93,7 +93,10 @@ export default function Home() {
       />
 
       {error && (
-        <div className="mb-8 rounded-md bg-red-500/20 p-4 text-red-200">
+        <div
+          className="mb-8 rounded-md bg-red-500/20 p-4"
+          style={{ color: `var(--destructive-foreground)` }}
+        >
           <p className="font-medium">Error</p>
           <p>{error}</p>
         </div>
