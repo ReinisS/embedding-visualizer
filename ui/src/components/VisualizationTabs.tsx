@@ -65,9 +65,17 @@ export default function VisualizationTabs({ results }: VisualizationTabsProps) {
 
         <div className="rounded-lg border border-white/10 bg-white/5 p-6">
           {activeDimension === "2d" ? (
-            <TwoDimensional results={results} algorithm={activeAlgorithm} />
+            <TwoDimensional
+              results={results}
+              algorithm={activeAlgorithm}
+              key={`2d-${activeAlgorithm}-${JSON.stringify(results.map((r) => r.label))}`}
+            />
           ) : (
-            <ThreeDimensional results={results} algorithm={activeAlgorithm} />
+            <ThreeDimensional
+              results={results}
+              algorithm={activeAlgorithm}
+              key={`3d-${activeAlgorithm}-${JSON.stringify(results.map((r) => r.label))}`}
+            />
           )}
         </div>
       </div>

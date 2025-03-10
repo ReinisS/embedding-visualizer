@@ -5,7 +5,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import { ItemResult } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-
+import { Textarea } from "@/components/ui/textarea";
 interface ThreeDimensionalProps {
   results: ItemResult[];
   algorithm: "pca" | "tsne" | "umap";
@@ -21,14 +21,21 @@ interface Point3DProps {
 }
 
 function Point3D({ position, color, label, index, isHovered, onHover }: Point3DProps) {
+  const labelKey = `label-${index}-${label}`;
+
   return (
     <group position={position}>
       <mesh onPointerOver={() => onHover(index)} onPointerOut={() => onHover(null)}>
         <sphereGeometry args={[isHovered ? 0.15 : 0.1, 16, 16]} />
         <meshStandardMaterial color={color} emissive={isHovered ? color : undefined} />
       </mesh>
-      <Html position={[0, 0.3, 0]} center>
-        <div className="pointer-events-none rounded-md bg-black/80 p-0.5 text-white">{label}</div>
+      <Html position={[0, 0.3, 0]} center key={labelKey}>
+        <Textarea
+          className="pointer-events-none min-h-1 resize-none rounded-md bg-black/80 px-2 py-0.5 text-center text-white"
+          key={labelKey}
+        >
+          {label.length > 30 ? `${label.substring(0, 30)}...` : label}
+        </Textarea>
       </Html>
     </group>
   );
@@ -120,7 +127,10 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
       <p className="mb-4 text-gray-300">{algorithmDescriptions[algorithm]}</p>
 
       <div className="relative h-[500px] w-full rounded-lg border border-white/10 bg-white/5">
-        <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 50 }}
+          key={`canvas-${algorithm}-${JSON.stringify(results.map((r) => r.label))}`}
+        >
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={1} />
           <OrbitControls enableRotate={rotationEnabled} />
@@ -128,7 +138,7 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
           {points.map((point, i) =>
             point ? (
               <Point3D
-                key={i}
+                key={`point-${i}-${point.label}`}
                 position={point.position}
                 color={`var(--accent-foreground)`}
                 label={point.label}
