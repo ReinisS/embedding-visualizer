@@ -66,6 +66,8 @@ const DebouncedTextInput = memo(
   }
 );
 
+DebouncedTextInput.displayName = "DebouncedTextInput";
+
 interface TextInputFormProps {
   texts: string[];
   activePresetId: string | null;
