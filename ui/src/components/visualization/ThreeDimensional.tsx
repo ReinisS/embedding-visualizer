@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 interface ThreeDimensionalProps {
   results: ItemResult[];
   algorithm: "pca" | "tsne" | "umap";
+  showLabels: boolean;
 }
 
 interface Point3DProps {
@@ -18,9 +19,10 @@ interface Point3DProps {
   index: number;
   isHovered: boolean;
   onHover: (index: number | null) => void;
+  showLabels: boolean;
 }
 
-function Point3D({ position, color, label, index, isHovered, onHover }: Point3DProps) {
+function Point3D({ position, color, label, index, isHovered, onHover, showLabels }: Point3DProps) {
   const labelKey = `label-${index}-${label}`;
 
   return (
@@ -29,19 +31,25 @@ function Point3D({ position, color, label, index, isHovered, onHover }: Point3DP
         <sphereGeometry args={[isHovered ? 0.15 : 0.1, 16, 16]} />
         <meshStandardMaterial color={color} emissive={isHovered ? color : undefined} />
       </mesh>
-      <Html position={[0, 0.3, 0]} center key={labelKey}>
-        <Textarea
-          className="pointer-events-none min-h-1 resize-none rounded-md bg-black/80 px-2 py-0.5 text-center text-white"
-          key={labelKey}
-        >
-          {label.length > 30 ? `${label.substring(0, 30)}...` : label}
-        </Textarea>
-      </Html>
+      {(showLabels || isHovered) && (
+        <Html position={[0, 0.3, 0]} center key={labelKey}>
+          <Textarea
+            className="pointer-events-none min-h-1 resize-none rounded-md bg-black/80 px-2 py-0.5 text-center text-white"
+            key={labelKey}
+          >
+            {label.length > 30 ? `${label.substring(0, 30)}...` : label}
+          </Textarea>
+        </Html>
+      )}
     </group>
   );
 }
 
-export default function ThreeDimensional({ results, algorithm }: ThreeDimensionalProps) {
+export default function ThreeDimensional({
+  results,
+  algorithm,
+  showLabels,
+}: ThreeDimensionalProps) {
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   const [rotationEnabled, setRotationEnabled] = useState(true);
 
@@ -145,6 +153,7 @@ export default function ThreeDimensional({ results, algorithm }: ThreeDimensiona
                 index={point.index}
                 isHovered={hoveredPoint === point.index}
                 onHover={setHoveredPoint}
+                showLabels={showLabels}
               />
             ) : null
           )}

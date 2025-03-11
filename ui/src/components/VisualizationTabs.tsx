@@ -5,6 +5,7 @@ import { ItemResult } from "@/lib/types";
 import TwoDimensional from "./visualization/TwoDimensional";
 import ThreeDimensional from "./visualization/ThreeDimensional";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 interface VisualizationTabsProps {
   results: ItemResult[];
@@ -16,6 +17,7 @@ type DimensionType = "2d" | "3d";
 export default function VisualizationTabs({ results }: VisualizationTabsProps) {
   const [activeAlgorithm, setActiveAlgorithm] = useState<AlgorithmType>("pca");
   const [activeDimension, setActiveDimension] = useState<DimensionType>("2d");
+  const [showLabels, setShowLabels] = useState<boolean>(true);
 
   if (!results || results.length === 0) {
     return null;
@@ -26,7 +28,7 @@ export default function VisualizationTabs({ results }: VisualizationTabsProps) {
       <h2 className="mb-6 text-xl font-semibold">Visualizations</h2>
 
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-4">
           <Tabs
             defaultValue="2d"
             value={activeDimension}
@@ -61,6 +63,14 @@ export default function VisualizationTabs({ results }: VisualizationTabsProps) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
+
+          <Button
+            variant="secondary"
+            onClick={() => setShowLabels(!showLabels)}
+            className="ml-auto"
+          >
+            {showLabels ? "Hide Labels" : "Show Labels"}
+          </Button>
         </div>
 
         <div className="rounded-lg border border-white/10 bg-white/5 p-6">
@@ -68,12 +78,14 @@ export default function VisualizationTabs({ results }: VisualizationTabsProps) {
             <TwoDimensional
               results={results}
               algorithm={activeAlgorithm}
+              showLabels={showLabels}
               key={`2d-${activeAlgorithm}-${JSON.stringify(results.map((r) => r.label))}`}
             />
           ) : (
             <ThreeDimensional
               results={results}
               algorithm={activeAlgorithm}
+              showLabels={showLabels}
               key={`3d-${activeAlgorithm}-${JSON.stringify(results.map((r) => r.label))}`}
             />
           )}

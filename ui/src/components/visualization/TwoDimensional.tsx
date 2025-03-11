@@ -11,9 +11,10 @@ import {
 interface TwoDimensionalProps {
   results: ItemResult[];
   algorithm: "pca" | "tsne" | "umap";
+  showLabels: boolean;
 }
 
-export default function TwoDimensional({ results, algorithm }: TwoDimensionalProps) {
+export default function TwoDimensional({ results, algorithm, showLabels }: TwoDimensionalProps) {
   if (!results || results.length === 0) {
     return null;
   }
@@ -120,7 +121,7 @@ export default function TwoDimensional({ results, algorithm }: TwoDimensionalPro
               }
             />
             <Scatter name="embeddings" data={chartData} fill={`var(--accent-foreground)`}>
-              <LabelList dataKey="label" position="top" />
+              {showLabels && <LabelList dataKey="label" position="top" />}
             </Scatter>
           </ScatterChart>
         </ChartContainer>
