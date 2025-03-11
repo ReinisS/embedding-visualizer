@@ -25,17 +25,19 @@ class DimensionalityReductionService:
 
         # t-SNE configuration
         self.tsne_params = {
-            "perplexity": 30.0,
-            "n_iter": 1000,
+            "perplexity": 30,
+            "n_iter": 500,
             "random_state": 42,
+            "metric": "cosine",
         }
 
         # UMAP configuration
         self.umap_params = {
-            "n_neighbors": 15,
+            "n_neighbors": 2,
             "min_dist": 0.1,
             "random_state": 42,
             "init": "random",
+            "metric": "cosine",
         }
 
     def _get_coordinates_2d(
