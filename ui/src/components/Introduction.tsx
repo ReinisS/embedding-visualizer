@@ -92,10 +92,10 @@ export default function Introduction() {
               fundamental building block.
             </p>
             <p>
-              Text embeddings are important both to understand the user's input text, and to
-              generate some output. For example, the word "bank" could mean a financial institution,
-              or the side of a river. The embedding helps the model understand the right meaning
-              based on surrounding words and context.
+              Text embeddings are important both to understand the user&apos;s input text, and to
+              generate some output. For example, the word &quot;bank&quot; could mean a financial
+              institution, or the side of a river. The embedding helps the model understand the
+              right meaning based on surrounding words and context.
             </p>
           </AccordionContent>
         </AccordionItem>
@@ -124,8 +124,8 @@ export default function Introduction() {
                 Xenova/all-MiniLM-L6-v2
               </a>{" "}
               model to generate text embeddings. Since real text embeddings usually have hundreds of
-              dimensions (384 dimensions in our case), it's not trivial to visualize and see them in
-              a nice way. So, in this tool, we use a few{" "}
+              dimensions (384 dimensions in our case), it&apos;s not trivial to visualize and see
+              them in a nice way. So, in this tool, we use a few{" "}
               <a
                 href="https://en.wikipedia.org/wiki/Dimensionality_reduction"
                 className="underline"
@@ -191,8 +191,8 @@ export default function Introduction() {
             <ol className="list-decimal space-y-2 pl-6">
               <li>Explore the preset text sample datasets</li>
               <li>
-                Enter your own text samples if you'd like (requires you to Sign In - it's free!). At
-                least 3 different text samples are required
+                Enter your own text samples if you&apos;d like (requires you to Sign In - it&apos;s
+                free!). At least 3 different text samples are required
               </li>
               <li>Explore the raw generated embedding values</li>
               <li>
