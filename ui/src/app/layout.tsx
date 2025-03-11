@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Text Embedding Visualizer",
+  title: "Text Embedding Visualizer - Reinis Šestakovskis",
   description: "Learn how computers understand the meaning behind text",
 };
 

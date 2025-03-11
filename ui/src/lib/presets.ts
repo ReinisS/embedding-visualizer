@@ -25,7 +25,7 @@ export const presetExamples: PresetExample[] = [
   },
   {
     id: "mixedSentences",
-    name: "Mixed Sentences",
+    name: "100 Mixed Sentences",
     texts: mixedSentencesData.results.map((item) => item.label),
     visualizationData: mixedSentencesData as VisualizationResponse,
   },

@@ -21,7 +21,6 @@ export default function TwoDimensional({ results, algorithm, showLabels }: TwoDi
 
   // Transform and normalize the data for the scatter chart
   const chartData = (() => {
-    // First collect all coordinates
     const coordinates = results
       .map((item) => {
         const reduction = item.reductions.find((r) => r.algorithm === algorithm);
@@ -31,13 +30,11 @@ export default function TwoDimensional({ results, algorithm, showLabels }: TwoDi
       .filter(Boolean);
 
     // Find min and max values for normalization
-    // TypeScript non-null assertion is safe here because we've already filtered out null values
     const minX = Math.min(...coordinates.map((coord) => coord!.x));
     const maxX = Math.max(...coordinates.map((coord) => coord!.x));
     const minY = Math.min(...coordinates.map((coord) => coord!.y));
     const maxY = Math.max(...coordinates.map((coord) => coord!.y));
 
-    // Normalize function
     const normalize = (value: number, min: number, max: number) => {
       // Handle edge case where min equals max
       if (min === max) return 0.5;
@@ -70,13 +67,6 @@ export default function TwoDimensional({ results, algorithm, showLabels }: TwoDi
     umap: "UMAP",
   };
 
-  // Get algorithm description
-  const algorithmDescriptions = {
-    pca: "PCA preserves the global structure of the data, showing the directions of maximum variance.",
-    tsne: "t-SNE emphasizes local similarities, creating clear clusters of similar items.",
-    umap: "UMAP balances local and global structure, often providing a good compromise between PCA and t-SNE.",
-  };
-
   // Chart configuration
   const chartConfig: ChartConfig = {
     embeddings: {
@@ -88,7 +78,6 @@ export default function TwoDimensional({ results, algorithm, showLabels }: TwoDi
   return (
     <div>
       <h3 className="mb-2 text-lg font-medium">{algorithmNames[algorithm]}</h3>
-      <p className="mb-4 text-gray-300">{algorithmDescriptions[algorithm]}</p>
 
       <div className="w-full rounded-lg border border-white/10 bg-white/5 p-4">
         <ChartContainer config={chartConfig} className="min-h-[200px] w-full">

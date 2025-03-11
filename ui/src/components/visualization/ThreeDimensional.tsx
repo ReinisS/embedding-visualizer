@@ -69,7 +69,6 @@ export default function ThreeDimensional({
       .filter(Boolean);
 
     // Find min and max values for normalization
-    // TypeScript non-null assertion is safe here because we've already filtered out null values
     const minX = Math.min(...coordinates.map((coord) => coord!.x));
     const maxX = Math.max(...coordinates.map((coord) => coord!.x));
     const minY = Math.min(...coordinates.map((coord) => coord!.y));
@@ -77,7 +76,6 @@ export default function ThreeDimensional({
     const minZ = Math.min(...coordinates.map((coord) => coord!.z));
     const maxZ = Math.max(...coordinates.map((coord) => coord!.z));
 
-    // Normalize function
     const normalize = (value: number, min: number, max: number) => {
       // Handle edge case where min equals max
       if (min === max) return 0.5;
@@ -115,24 +113,15 @@ export default function ThreeDimensional({
       .filter(Boolean);
   })();
 
-  // Get algorithm display name
   const algorithmNames = {
     pca: "Principal Component Analysis (PCA)",
     tsne: "t-SNE",
     umap: "UMAP",
   };
 
-  // Get algorithm description
-  const algorithmDescriptions = {
-    pca: "PCA in 3D shows the three principal directions of variance in the data.",
-    tsne: "t-SNE in 3D creates clusters that preserve local similarities between points.",
-    umap: "UMAP in 3D balances preserving both local and global structure of the data.",
-  };
-
   return (
     <div className="mb-8">
       <h3 className="mb-2 text-lg font-medium">{algorithmNames[algorithm]} (3D)</h3>
-      <p className="mb-4 text-gray-300">{algorithmDescriptions[algorithm]}</p>
 
       <div className="relative h-[500px] w-full rounded-lg border border-white/10 bg-white/5">
         <Canvas
