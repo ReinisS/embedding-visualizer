@@ -13,6 +13,7 @@ import {
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { LoaderCircle } from "lucide-react";
 
 const DebouncedTextInput = memo(
   ({
@@ -206,7 +207,14 @@ const TextInputForm = memo(function TextInputForm({
                       }
                     }}
                   >
-                    {isLoading ? "Processing..." : "Visualize Input"}
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <LoaderCircle className="scale-125 animate-spin" />
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      "Visualize Input"
+                    )}
                   </Button>
                 ) : (
                   <SignInButton mode="modal">
