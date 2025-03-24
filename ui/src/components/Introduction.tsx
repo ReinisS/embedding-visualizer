@@ -211,8 +211,8 @@ export default function Introduction() {
             <p className="mb-4">
               Text embeddings are used more and more in the modern days to help computers understand
               and deal with human language. For example, instead of using text directly, Large
-              Language Models (LLMs) like OpenAI's GPT, Anthropic's Claude, and others use text
-              embeddings as a fundamental building block.
+              Language Models (LLMs) like OpenAI&apos;s GPT, Anthropic&apos;s Claude, and others use
+              text embeddings as a fundamental building block.
             </p>
             <div className="mx-auto my-6 max-w-md">
               <svg
@@ -240,10 +240,10 @@ export default function Introduction() {
                   Input Text
                 </text>
                 <text x="100" y="80" fill="white" textAnchor="middle" fontSize="12">
-                  "I need to deposit
+                  &quot;I need to deposit
                 </text>
                 <text x="100" y="100" fill="white" textAnchor="middle" fontSize="12">
-                  money at the bank"
+                  money at the bank&quot;
                 </text>
 
                 {/* Arrow */}
@@ -360,10 +360,10 @@ export default function Introduction() {
                   Output
                 </text>
                 <text x="410" y="185" fill="white" textAnchor="middle" fontSize="12">
-                  "Your financial
+                  &quot;Your financial
                 </text>
                 <text x="410" y="205" fill="white" textAnchor="middle" fontSize="12">
-                  transaction is ready"
+                  transaction is ready&quot;
                 </text>
 
                 {/* Context understanding - Bank example */}
@@ -388,14 +388,14 @@ export default function Introduction() {
                 </text>
 
                 <text x="70" y="180" fill="white" textAnchor="start" fontSize="11">
-                  • "bank" + "deposit" + "money"
+                  • &quot;bank&quot; + &quot;deposit&quot; + &quot;money&quot;
                 </text>
                 <text x="90" y="200" fill="#10b981" textAnchor="start" fontSize="11">
                   → Financial institution
                 </text>
 
                 <text x="70" y="225" fill="white" textAnchor="start" fontSize="11">
-                  • "bank" + "river" + "fishing"
+                  • &quot;bank&quot; + &quot;river&quot; + &quot;fishing&quot;
                 </text>
                 <text x="90" y="245" fill="#10b981" textAnchor="start" fontSize="11">
                   → Edge of a river
