@@ -115,7 +115,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className="mx-auto px-4">
       <div className="mb-12 text-center">
         <h1 className="mb-2 text-3xl font-bold">Text Embedding Visualizer</h1>
         <p className="text-lg text-gray-400">

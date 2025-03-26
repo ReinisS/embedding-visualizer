@@ -28,7 +28,7 @@ export default function VisualizationTabs({ results }: VisualizationTabsProps) {
       <h2 className="mb-6 text-xl font-semibold">Visualizations</h2>
 
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Tabs
             defaultValue="2d"
             value={activeDimension}
@@ -63,15 +63,10 @@ export default function VisualizationTabs({ results }: VisualizationTabsProps) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-
-          <Button
-            variant="secondary"
-            onClick={() => setShowLabels(!showLabels)}
-            className="ml-auto"
-          >
-            {showLabels ? "Hide Labels" : "Show Labels"}
-          </Button>
         </div>
+        <Button variant="secondary" onClick={() => setShowLabels(!showLabels)} className="ml-auto">
+          {showLabels ? "Hide Labels" : "Show Labels"}
+        </Button>
 
         <div className="rounded-lg border border-white/10 bg-white/5 p-6">
           {activeDimension === "2d" ? (
