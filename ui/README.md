@@ -51,7 +51,7 @@ ui/
 │   │   └── visualization/ # Visualization-specific components
 │   ├── hooks/            # Custom React hooks
 │   ├── lib/              # Utility functions and types
-│   └── middleware.ts     # Clerk authentication middleware
+│   └── proxy.ts     # Clerk authentication middleware
 └── ...config files
 ```
 

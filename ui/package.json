@@ -21,7 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "0.561.0",
-    "next": "15.5.9",
+    "next": "16.0.10",
     "next-themes": "0.4.6",
     "posthog-js": "1.306.1",
     "react": "^19.2.3",
@@ -30,6 +30,7 @@
     "tailwind-merge": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.182.0",
+    "three-stdlib": "^2.36.1",
     "use-debounce": "^10.0.6"
   },
   "overrides": {
@@ -44,11 +45,11 @@
     "@types/three": "^0.182.0",
     "autoprefixer": "10.4.22",
     "eslint": "9.39.2",
-    "eslint-config-next": "15.5.9",
+    "eslint-config-next": "16.0.10",
     "eslint-config-prettier": "10.1.8",
     "postcss": "^8.5.6",
     "prettier": "^3.7.4",
-    "prettier-plugin-tailwindcss": "^0.6.14",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "4.1.18",
     "typescript": "5.9.3"
   }
