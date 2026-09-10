@@ -221,9 +221,10 @@ def test_reduce_tsne(dimensionality_service, sample_embeddings):
 
     # Get the expected t-SNE parameters
     expected_params = {
-        "perplexity": 30.0,
-        "n_iter": 1000,
+        "perplexity": 30,
+        "n_iter": 500,
         "random_state": 42,
+        "metric": "cosine",
     }
 
     # Verify 2D t-SNE
@@ -264,10 +265,11 @@ def test_reduce_umap(dimensionality_service, sample_embeddings):
 
     # Get the expected UMAP parameters
     expected_params = {
-        "n_neighbors": 15,
+        "n_neighbors": 2,
         "min_dist": 0.1,
         "random_state": 42,
         "init": "random",
+        "metric": "cosine",
     }
 
     # Verify 2D UMAP
