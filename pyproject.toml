@@ -9,6 +9,7 @@ dependencies = [
     "fastapi[standard]>=0.115.11",
     "pydantic>=2.10.6",
     "sentence-transformers>=3.4.1",
+    "torch>=2.6.0,<2.7",
     "scikit-learn>=1.6.1",
     "numpy>=1.23.5,<1.24.0",
     "umap-learn>=0.5.7",
@@ -31,3 +32,13 @@ dev = [
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "platform_system != 'Darwin'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
