@@ -36,3 +36,33 @@ class TestAppHealthEndpoint:
 
         assert response.status_code == 200
         assert response.json() == {"status": "healthy"}
+
+    def test_production_frontend_preflight(self, test_client):
+        response = test_client.options(
+            "/embedding-visualizer/api/visualize",
+            headers={
+                "Origin": "https://embeddings.reiniss.com",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == "https://embeddings.reiniss.com"
+
+    def test_untrusted_origin_preflight(self, test_client):
+        response = test_client.options(
+            "/embedding-visualizer/api/visualize",
+            headers={
+                "Origin": "https://untrusted.example",
+                "Access-Control-Request-Method": "POST",
+            },
+        )
+        assert response.status_code == 400
+        assert "access-control-allow-origin" not in response.headers
+
+    def test_visualization_requires_authentication(self, test_client):
+        response = test_client.post(
+            "/embedding-visualizer/api/visualize",
+            json={"texts": [{"text": text} for text in ["one", "two", "three", "four"]]},
+        )
+        assert response.status_code == 401

@@ -1,6 +1,6 @@
 """Tests for API dependencies."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -10,7 +10,9 @@ from app.api.dependencies import (
     get_clerk,
     get_posthog,
     track_event,
+    verify_auth_token,
 )
+from app.services.cache import RateLimitUnavailableError
 from tests.conftest import MockRequestState
 
 
@@ -62,7 +64,9 @@ async def test_check_rate_limit_exceeded(
 async def test_check_rate_limit_no_user_id(mock_fastapi_request, setup_cache_service):
     """Test rate limit check with no user ID."""
     request_state = MockRequestState(is_signed_in=True, payload={})
-    await check_rate_limit(mock_fastapi_request, request_state)
+    with pytest.raises(HTTPException) as excinfo:
+        await check_rate_limit(mock_fastapi_request, request_state)
+    assert excinfo.value.status_code == 401
     # Verify cache service was not called
     setup_cache_service.check_rate_limit.assert_not_called()
 
@@ -73,9 +77,45 @@ async def test_check_rate_limit_cache_disabled(mock_fastapi_request, mock_auth_r
     with patch("app.api.dependencies.CacheService") as mock_cache_service_class:
         mock_cache_instance = MagicMock()
         mock_cache_instance.enabled = False
+        mock_cache_instance.check_rate_limit = AsyncMock(
+            side_effect=RateLimitUnavailableError("Redis is disabled")
+        )
         mock_cache_service_class.return_value = mock_cache_instance
+        with pytest.raises(HTTPException) as excinfo:
+            await check_rate_limit(mock_fastapi_request, mock_auth_request_state)
+        assert excinfo.value.status_code == 503
+        assert excinfo.value.headers["Retry-After"] == "60"
+
+
+@pytest.mark.asyncio
+async def test_redis_failure_rejects_request(
+    mock_fastapi_request, mock_auth_request_state, setup_cache_service
+):
+    setup_cache_service.check_rate_limit.side_effect = RateLimitUnavailableError("offline")
+    with pytest.raises(HTTPException) as excinfo:
         await check_rate_limit(mock_fastapi_request, mock_auth_request_state)
-        # No assertions needed - test passes if no exception is raised
+    assert excinfo.value.status_code == 503
+    setup_cache_service.redis.aclose.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_authentication_restricts_token_origin(mock_fastapi_request, test_settings):
+    clerk = MagicMock()
+    clerk.authenticate_request.return_value = MockRequestState(
+        is_signed_in=True, payload={"sub": "user_123"}
+    )
+    await verify_auth_token(mock_fastapi_request, clerk)
+    options = clerk.authenticate_request.call_args.args[1]
+    assert options.authorized_parties == ["https://embeddings.reiniss.com"]
+
+
+@pytest.mark.asyncio
+async def test_authentication_rejects_missing_subject(mock_fastapi_request, test_settings):
+    clerk = MagicMock()
+    clerk.authenticate_request.return_value = MockRequestState(is_signed_in=True)
+    with pytest.raises(HTTPException) as excinfo:
+        await verify_auth_token(mock_fastapi_request, clerk)
+    assert excinfo.value.status_code == 401
 
 
 def test_track_event(mock_fastapi_request, mock_auth_request_state, mock_posthog):

@@ -28,11 +28,22 @@ FROM python:3.11-slim-bookworm
 # Python executable must be the same, e.g., using `python:3.10-slim-bookworm`
 # will fail.
 
+RUN groupadd --gid 10001 app \
+    && useradd --uid 10001 --gid app --create-home --shell /usr/sbin/nologin app \
+    && mkdir -p /home/app/.cache/huggingface /home/app/.cache/numba \
+    && chown -R app:app /home/app/.cache
+
 # Copy the application from the builder
-COPY --from=builder --chown=app:app /app /app
+COPY --from=builder --chown=root:root --chmod=755 /app /app
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
+ENV HF_HOME="/home/app/.cache/huggingface" \
+    NUMBA_CACHE_DIR="/home/app/.cache/numba" \
+    PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+USER app
 
 # Run the FastAPI application by default
 CMD ["fastapi", "run", "--host", "0.0.0.0", "/app/main.py"]

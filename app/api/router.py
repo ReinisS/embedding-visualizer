@@ -14,6 +14,9 @@ from app.models.schemas import (
 from app.services.cache import CacheService
 from app.services.dimensionality import DimensionalityReductionService
 from app.services.embedding import EmbeddingService
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix=get_settings().api_prefix)
 
@@ -97,7 +100,8 @@ async def visualize_text(
         return VisualizationResponse(results=item_results)
 
     except Exception as e:
+        logger.exception("Visualization processing failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process text: {str(e)}",
+            detail="Failed to process text. Please try again later.",
         ) from e

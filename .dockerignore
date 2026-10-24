@@ -1,4 +1,5 @@
 .venv
+.security-test-tools
 .git
 .env
 .env.*

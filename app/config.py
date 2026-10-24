@@ -1,8 +1,9 @@
 """Configuration settings for the embedding visualizer."""
 
 from functools import lru_cache
+from urllib.parse import urlsplit
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,6 +13,16 @@ class Settings(BaseSettings):
     # API Configuration
     debug: bool = Field(default=False, validation_alias="APP_DEBUG")
     api_prefix: str = Field(default="/embedding-visualizer/api", validation_alias="APP_API_PREFIX")
+    cors_origins: list[str] = Field(
+        default=["https://embeddings.reiniss.com"],
+        min_length=1,
+        validation_alias="APP_CORS_ORIGINS",
+    )
+    clerk_authorized_parties: list[str] = Field(
+        default=["https://embeddings.reiniss.com"],
+        min_length=1,
+        validation_alias="APP_CLERK_AUTHORIZED_PARTIES",
+    )
 
     # Authentication
     clerk_publishable_key: str = Field(..., validation_alias="APP_CLERK_PUBLISHABLE_KEY")
@@ -42,9 +53,29 @@ class Settings(BaseSettings):
     # Model Configuration
     model_name: str = Field(default="all-MiniLM-L6-v2", validation_alias="APP_MODEL_NAME")
 
+    @field_validator("cors_origins", "clerk_authorized_parties")
+    @classmethod
+    def validate_origins(cls, origins: list[str]) -> list[str]:
+        """Require explicit HTTP origins rather than wildcard or URL patterns."""
+        for origin in origins:
+            parts = urlsplit(origin)
+            if (
+                parts.scheme not in {"http", "https"}
+                or not parts.hostname
+                or "*" in origin
+                or parts.username is not None
+                or parts.password is not None
+                or parts.path
+                or parts.query
+                or parts.fragment
+            ):
+                raise ValueError("Origins must be exact http(s) origins without a trailing slash")
+        return origins
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_nested_delimiter="__",
+        hide_input_in_errors=True,
     )
 
 
