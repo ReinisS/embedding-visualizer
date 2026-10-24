@@ -10,7 +10,7 @@ from clerk_backend_api.jwks_helpers import AuthenticateRequestOptions
 from fastapi import Depends, HTTPException, Request, status
 
 from app.config import get_settings
-from app.services.cache import CacheService
+from app.services.cache import CacheService, RateLimitUnavailableError
 
 
 async def get_clerk() -> AsyncGenerator[Clerk, None]:
@@ -46,9 +46,14 @@ async def verify_auth_token(
 
     request_state = clerk.authenticate_request(
         httpx_request,
-        AuthenticateRequestOptions(),
+        AuthenticateRequestOptions(authorized_parties=get_settings().clerk_authorized_parties),
     )
-    if request_state.is_signed_in:
+    if (
+        request_state.is_signed_in
+        and request_state.payload
+        and isinstance(request_state.payload.get("sub"), str)
+        and request_state.payload["sub"]
+    ):
         return request_state
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -70,20 +75,25 @@ async def check_rate_limit(
         HTTPException: If rate limit is exceeded
     """
     if request_state.payload is None:
-        return
+        raise HTTPException(status_code=401, detail="Missing authenticated user")
 
     user_id: str | None = request_state.payload.get("sub")
-    if not user_id:
-        return
+    if not isinstance(user_id, str) or not user_id:
+        raise HTTPException(status_code=401, detail="Missing authenticated user")
 
     # Use cache service for rate limiting
     cache_service = CacheService()
-    if not cache_service.enabled:
-        return  # Skip rate limiting if Redis is not available
-
-    # Check rate limit for this user and endpoint
-    endpoint = request.url.path
-    is_allowed, _ = await cache_service.check_rate_limit(user_id, endpoint)
+    try:
+        is_allowed, _ = await cache_service.check_rate_limit(user_id, request.url.path)
+    except RateLimitUnavailableError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Rate limiting is temporarily unavailable. Please try again shortly.",
+            headers={"Retry-After": "60"},
+        ) from exc
+    finally:
+        if cache_service.enabled:
+            await cache_service.redis.aclose()
 
     if not is_allowed:
         raise HTTPException(

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from redis.exceptions import RedisError
 
-from app.services.cache import CacheService
+from app.services.cache import CacheService, RateLimitUnavailableError
 
 
 @pytest.fixture
@@ -17,6 +17,7 @@ def mock_redis():
         redis_instance.setex.return_value = True
         redis_instance.incr.return_value = 1
         redis_instance.expire.return_value = True
+        redis_instance.eval.return_value = 1
         mock.return_value = redis_instance
         yield redis_instance
 
@@ -138,26 +139,25 @@ async def test_check_rate_limit(cache_service, mock_redis, test_settings):
         mock_settings.return_value.requests_per_minute_per_user = 5
 
         # Under limit case
-        mock_redis.incr.return_value = 3
+        mock_redis.eval.return_value = 3
         is_allowed, count = await cache_service.check_rate_limit("test_user", "/api/test")
         assert is_allowed is True
         assert count == 3
-        mock_redis.incr.assert_called_with("rate_limit:test_user:/api/test")
+        assert mock_redis.eval.call_args.args[1:] == (1, "rate_limit:test_user:/api/test")
 
         # Reset mocks
-        mock_redis.incr.reset_mock()
+        mock_redis.eval.reset_mock()
 
         # Over limit case
-        mock_redis.incr.return_value = 6
+        mock_redis.eval.return_value = 6
         is_allowed, count = await cache_service.check_rate_limit("test_user", "/api/test")
         assert is_allowed is False
         assert count == 6
 
         # Redis error case
-        mock_redis.incr.side_effect = RedisError("Test Redis error")
-        is_allowed, count = await cache_service.check_rate_limit("test_user", "/api/test")
-        assert is_allowed is True
-        assert count == 0
+        mock_redis.eval.side_effect = RedisError("Test Redis error")
+        with pytest.raises(RateLimitUnavailableError):
+            await cache_service.check_rate_limit("test_user", "/api/test")
 
 
 @pytest.mark.asyncio
@@ -168,6 +168,5 @@ async def test_disabled_cache_operations(disabled_cache_service):
     assert await disabled_cache_service.get_embeddings(["test text"]) == {}
     assert await disabled_cache_service.store_embeddings({"test text": [0.1, 0.2, 0.3]}) is False
 
-    is_allowed, count = await disabled_cache_service.check_rate_limit("test_user", "/api/test")
-    assert is_allowed is True
-    assert count == 0
+    with pytest.raises(RateLimitUnavailableError):
+        await disabled_cache_service.check_rate_limit("test_user", "/api/test")

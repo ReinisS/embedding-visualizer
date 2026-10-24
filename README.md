@@ -46,6 +46,9 @@ uv sync
 
 ## Running with Docker
 
+For production access controls, deployment checks, and recovery instructions, see
+[the security runbook](docs/security.md).
+
 1. Build and start the containers (both the FastAPI backend and Redis):
 ```bash
 docker compose up --build

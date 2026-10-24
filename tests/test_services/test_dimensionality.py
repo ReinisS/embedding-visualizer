@@ -5,7 +5,11 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from app.models.schemas import Coordinates2D, Coordinates3D, DimensionalityReductionResult
+from app.models.schemas import (
+    Coordinates2D,
+    Coordinates3D,
+    DimensionalityReductionResult,
+)
 from app.services.dimensionality import DimensionalityReductionService
 
 

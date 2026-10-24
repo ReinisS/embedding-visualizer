@@ -10,6 +10,15 @@ services:
   backend:
     build: .
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 768m
+    memswap_limit: 896m
+    pids_limit: 128
+    volumes:
+      - model_cache:/home/app/.cache/huggingface
     ports:
       - "127.0.0.1:8000:8000"
     env_file:
@@ -23,7 +32,7 @@ services:
         - CMD
         - python
         - -c
-        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/docs', timeout=5)"
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/embedding-visualizer/api/health', timeout=5)"
       interval: 30s
       timeout: 10s
       retries: 3
@@ -44,3 +53,4 @@ services:
 
 volumes:
   redis_data:
+  model_cache:

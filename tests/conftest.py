@@ -6,6 +6,7 @@ import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 from posthog import Client as PosthogClient
+from starlette.datastructures import URL
 
 from app.config import Settings
 from app.models.schemas import (
@@ -49,6 +50,8 @@ def test_settings():
     test_config = MagicMock(spec=Settings)
     test_config.debug = True
     test_config.api_prefix = "/api"
+    test_config.cors_origins = ["https://embeddings.reiniss.com"]
+    test_config.clerk_authorized_parties = ["https://embeddings.reiniss.com"]
     test_config.clerk_publishable_key = "test_publishable_key"
     test_config.clerk_secret_key = "test_secret_key"
     test_config.clerk_api_base = "https://api.clerk.com"
@@ -67,6 +70,7 @@ def test_settings():
     modules = [
         "app.config",
         "app.api.router",
+        "app.api.dependencies",
         "app.services.cache",
         "app.services.embedding",
     ]
@@ -153,6 +157,7 @@ def mock_cache_service():
         service_instance.get_embeddings = AsyncMock(return_value={})
         service_instance.store_embeddings = AsyncMock(return_value=True)
         service_instance.check_rate_limit = AsyncMock(return_value=(True, 1))
+        service_instance.redis.aclose = AsyncMock()
 
         yield service_instance
 
@@ -180,6 +185,6 @@ def mock_fastapi_request():
     """Mock a FastAPI request."""
     mock_request = MagicMock(spec=Request)
     mock_request.method = "GET"
-    mock_request.url.path = "/api/test"
+    mock_request.url = URL("https://api.example.com/api/test")
     mock_request.headers = {"Authorization": "Bearer test_token"}
     return mock_request

@@ -11,6 +11,10 @@ from app.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+class RateLimitUnavailableError(RuntimeError):
+    """Raised when requests cannot be safely rate limited."""
+
+
 class CacheService:
     """Service for caching embeddings in Redis."""
 
@@ -26,6 +30,8 @@ class CacheService:
                     port=self.settings.cache_port,
                     db=self.settings.cache_db,
                     password=self.settings.cache_password,
+                    socket_connect_timeout=2,
+                    socket_timeout=2,
                 )
                 self.ttl = self.settings.cache_ttl_seconds
             except (ConnectionError, RedisError) as e:
@@ -144,20 +150,27 @@ class CacheService:
             Tuple of (is_allowed, current_count)
         """
         if not self.enabled:
-            return True, 0  # Allow request if Redis is not available
+            raise RateLimitUnavailableError("Redis is disabled")
 
         try:
             # Create a unique key for this user and endpoint
             key = f"rate_limit:{user_id}:{endpoint}"
 
-            # Increment the counter and set expiry if it doesn't exist
-            count = await self.redis.incr(key)
-            if count == 1:
-                await self.redis.expire(key, 60)
+            # Keep the increment and expiry atomic, including recovery of old
+            # counters that were left without an expiry by a failed request.
+            count = int(
+                await self.redis.eval(
+                    "local count = redis.call('INCR', KEYS[1]); "
+                    "if redis.call('TTL', KEYS[1]) < 0 then "
+                    "redis.call('EXPIRE', KEYS[1], 60); end; return count",
+                    1,
+                    key,
+                )
+            )
 
             # Check if user has exceeded their limit
             max_requests = self.settings.requests_per_minute_per_user
             return count <= max_requests, count
         except RedisError as e:
             logger.error("Error checking rate limit: %s", e)
-            return True, 0  # Allow request if Redis fails
+            raise RateLimitUnavailableError("Redis rate limit check failed") from e
